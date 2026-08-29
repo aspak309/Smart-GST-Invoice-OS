@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Smart GST Invoice OS — free, professional GST invoice maker with GST checks, live preview and QR upload.">
+  <meta name="theme-color" content="#071a36">
+  <title>Smart GST Invoice OS — Free GST Invoice Maker</title>
+
+  <!-- Google Search Console: replace the content value with your real verification token when ready. -->
+  <!-- <meta name="google-site-verification" content="YOUR_GSC_TOKEN"> -->
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#071a36",
+            brand: "#2563eb",
+            soft: "#eef4ff"
+          },
+          boxShadow: {
+            premium: "0 20px 60px rgba(7,26,54,.12)"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-slate-100 text-slate-900">
+  <div id="toast" class="toast hidden"></div>
+
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-mark">✓</div>
+      <div>
+        <div class="brand-title">Smart GST</div>
+        <div class="brand-subtitle">Invoice OS</div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <span>⌕</span>
+      <input id="globalSearch" type="search" placeholder="Search invoices, customers, products…">
+      <kbd>Ctrl K</kbd>
+    </div>
+
+    <div class="top-actions">
+      <button class="icon-btn" title="Theme" id="themeBtn">☼</button>
+      <button class="icon-btn" title="Help" id="helpBtn">?</button>
+      <span class="lang-pill">EN</span>
+      <button class="user-pill" id="loginBtn" title="Login is optional in this free local-first version">
+        <span class="avatar">G</span><span>Continue</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <nav>
+        <button class="nav-item active">⌂ <span>Dashboard</span></button>
+        <button class="nav-item active-soft" id="newInvoiceNav">▣ <span>Create Invoice</span></button>
+        <button class="nav-item">▤ <span>Invoices</span></button>
+        <button class="nav-item">↩ <span>Credit Notes</span></button>
+        <button class="nav-item">↪ <span>Debit Notes</span></button>
+        <button class="nav-item">▧ <span>Delivery Challan</span></button>
+        <button class="nav-item">▤ <span>Bill of Supply</span></button>
+        <button class="nav-item">♙ <span>Customers</span></button>
+        <button class="nav-item">□ <span>Products / Services</span></button>
+        <button class="nav-item">⇢ <span>E-Way Bill</span></button>
+        <button class="nav-item">⌁ <span>E-Invoice (IRN)</span></button>
+        <button class="nav-item">₹ <span>Payments</span></button>
+        <button class="nav-item">▥ <span>Reports</span></button>
+        <button class="nav-item">⚙ <span>Settings</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="help-card">
+          <b>Need Help?</b>
+          <span>Free local-first workspace</span>
+        </div>
+        <div class="free-card">
+          <div><b>FREE PLAN</b><br><span>No server bill storage</span></div>
+          <span class="crown">◆</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">GST BILLING WORKSPACE</div>
+          <h1>Create professional invoice</h1>
+          <p>Build, validate, preview and download — all in one place.</p>
+        </div>
+        <div class="head-buttons">
+          <button class="btn secondary" id="saveDraftBtn">Save Draft</button>
+          <button class="btn primary" id="downloadTopBtn">Preview & Download ↓</button>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step active"><span>1</span> Invoice Details</div>
+        <div class="step-line"></div>
+        <div class="step"><span>2</span> Add Items</div>
+        <div class="step-line"></div>
+        <div class="step"><span>3</span> Review & Preview</div>
+        <div class="step-line"></div>
+        <div class="step"><span>4</span> Download / Share</div>
+      </div>
+
+      <section class="editor-grid">
+        <div class="editor-panel">
+
+          <section class="card">
+            <div class="card-title">
+              <div><span class="title-icon">▣</span><b>Invoice Details</b></div>
+              <span class="tiny-badge">LIVE</span>
+            </div>
+
+            <div class="form-grid three">
+              <label>Invoice Type
+                <select id="invoiceType">
+                  <option>Tax Invoice</option>
+                  <option>Bill of Supply</option>
+                  <option>Proforma Invoice</option>
+                </select>
+              </label>
+              <label>Invoice No.
+                <input id="invoiceNo" maxlength="30">
+              </label>
+              <label>Invoice Date
+                <input id="invoiceDate" type="date">
+              </label>
+            </div>
+
+            <div class="form-grid two">
+              <div class="subcard">
+                <div class="subcard-head">Business / From <button class="mini-btn" id="editBusinessBtn">Edit</button></div>
+                <label>Business Name<input id="sellerName" value="Your Firm Name"></label>
+                <label>Address<input id="sellerAddress" value="27, Business Park, Ludhiana, Punjab - 141003"></label>
+                <label>GSTIN<input id="sellerGstin" value="03ABCDE1234F1Z8" maxlength="15"></label>
+                <label>State<select id="sellerState"></select></label>
+              </div>
+
+              <div class="subcard">
+                <div class="subcard-head">Billing To <button class="mini-btn" id="addCustomerBtn">+ Add</button></div>
+                <label>Customer Name<input id="buyerName" value="ABC Enterprises"></label>
+                <label>Address<input id="buyerAddress" value="45, Industrial Area, Ludhiana, Punjab - 141003"></label>
+                <label>GSTIN<input id="buyerGstin" value="03AAAAA1234A1Z5" maxlength="15"></label>
+                <label>State<select id="buyerState"></select></label>
+              </div>
+            </div>
+
+            <div class="form-grid three">
+              <label>Place of Supply<select id="placeOfSupply"></select></label>
+              <label>Payment Terms
+                <select id="paymentTerms">
+                  <option>Due on Receipt</option>
+                  <option>Net 7 Days</option>
+                  <option>Net 15 Days</option>
+                  <option>Net 30 Days</option>
+                </select>
+              </label>
+              <label>Due Date<input id="dueDate" type="date"></label>
+            </div>
+
+            <div id="gstGuard" class="guard good">
+              <span class="guard-icon">✓</span>
+              <div><b>GST Guard</b><span id="guardText">Checking your invoice…</span></div>
+              <button class="mini-btn" id="checkBtn">Check Again</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-title">
+              <div><span class="title-icon">＋</span><b>Items</b></div>
+              <div class="inline-actions">
+                <button class="btn small primary" id="addItemBtn">+ Add Item</button>
+                <button class="btn small secondary" id="sampleBtn">Use Sample</button>
+              </div>
+            </div>
+
+            <div class="items-head">
+              <span>#</span><span>Item Name</span><span>HSN/SAC</span><span>Qty</span><span>UOM</span><span>Rate (₹)</span><span>GST %</span><span>Amount (₹)</span><span></span>
+            </div>
+            <div id="items"></div>
+
+            <div class="gst-summary-row">
+              <div class="amount-box"><span>Taxable Amount</span><b id="taxableTotal">₹ 0.00</b></div>
+              <div class="amount-box"><span id="taxLabel">IGST (18%)</span><b id="taxTotal">₹ 0.00</b></div>
+              <div class="amount-box total-box"><span>Invoice Total</span><b id="grandTotal">₹ 0.00</b></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-title"><div><span class="title-icon">⌁</span><b>Payment & QR</b></div><span class="tiny-badge">OPTIONAL</span></div>
+            <div class="qr-upload-layout">
+              <div>
+                <label>UPI ID (optional)<input id="upiId" placeholder="yourname@upi"></label>
+                <div class="upload-note">Upload your existing Paytm / PhonePe / Google Pay / BHIM QR image. We do not generate or process payments.</div>
+                <label class="upload-btn">
+                  <input id="qrInput" type="file" accept="image/png,image/jpeg,image/webp">
+                  <span>＋ Upload QR Image</span>
+                </label>
+                <button class="mini-btn danger hidden" id="removeQrBtn">Remove QR</button>
+              </div>
+              <div class="qr-box"><img id="qrThumb" alt="Uploaded payment QR preview" class="hidden"><span id="qrPlaceholder">QR preview</span></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-title"><div><span class="title-icon">▤</span><b>Bank & Terms</b></div></div>
+            <div class="form-grid two">
+              <div class="subcard">
+                <label>Bank Name<input id="bankName" value="Your Bank"></label>
+                <label>A/c No.<input id="accountNo" placeholder="Optional"></label>
+                <label>IFSC Code<input id="ifsc" placeholder="Optional"></label>
+              </div>
+              <div class="subcard">
+                <label>Terms & Conditions<textarea id="terms" rows="5">1. Goods once sold will not be taken back.
+2. Subject to our jurisdiction.
+3. Payment due as per agreed terms.</textarea></label>
+              </div>
+            </div>
+          </section>
+
+          <div class="privacy-note">⚠️ <b>Important:</b> Download your PDF after generating. This starter version keeps invoice drafts and QR data in your browser only; it does not send bills to our server.</div>
+        </div>
+
+        <div class="preview-panel">
+          <div class="preview-toolbar">
+            <div><span class="live-dot"></span><b>Live Preview</b></div>
+            <button class="btn small secondary" id="templateBtn">Change Template</button>
+          </div>
+
+          <div id="invoicePreview" class="invoice-paper">
+            <div class="invoice-top">
+              <div class="invoice-title">TAX INVOICE</div>
+              <div class="logo-area"><div class="logo-placeholder">YOUR<br>LOGO</div><b id="pSellerName">Your Firm Name</b><span id="pSellerAddress">27, Business Park, Ludhiana, Punjab - 141003</span><span>GSTIN: <b id="pSellerGstin">03ABCDE1234F1Z8</b></span></div>
+            </div>
+
+            <div class="invoice-meta">
+              <div><b>Invoice No.</b><span id="pInvoiceNo"></span><b>Invoice Date</b><span id="pInvoiceDate"></span></div>
+              <div><b>Place of Supply</b><span id="pPlace"></span><b>Payment Terms</b><span id="pPayment"></span></div>
+            </div>
+
+            <div class="bill-grid">
+              <div><small>BILL TO</small><b id="pBuyerName"></b><span id="pBuyerAddress"></span><span>GSTIN: <b id="pBuyerGstin"></b></span></div>
+              <div><small>SHIP TO</small><b id="pBuyerName2"></b><span id="pBuyerAddress2"></span><span>State: <b id="pBuyerState"></b></span></div>
+            </div>
+
+            <table class="invoice-table">
+              <thead><tr><th>#</th><th>Description of Goods</th><th>HSN/SAC</th><th>Qty</th><th>UOM</th><th>Rate</th><th>GST</th><th>Amount</th></tr></thead>
+              <tbody id="pItems"></tbody>
+            </table>
+
+            <div class="totals-area">
+              <div class="words"><small>AMOUNT IN WORDS</small><b id="pWords">Zero Rupees Only</b></div>
+              <div class="totals"><div><span>Taxable Amount</span><b id="pTaxable">₹ 0.00</b></div><div><span id="pTaxName">IGST (18%)</span><b id="pTax">₹ 0.00</b></div><div class="grand"><span>Invoice Total</span><b id="pGrand">₹ 0.00</b></div></div>
+            </div>
+
+            <div class="bottom-grid">
+              <div>
+                <div class="bank-print"><small>BANK DETAILS</small><b id="pBank">Your Bank</b><span id="pAccount"></span><span id="pIfsc"></span></div>
+                <div class="terms-print"><small>TERMS & CONDITIONS</small><span id="pTerms"></span></div>
+              </div>
+              <div class="qr-print"><small>SCAN TO PAY</small><img id="pQr" class="hidden" alt="Payment QR"><span id="pUpi"></span></div>
+            </div>
+
+            <div class="signature"><span>Authorised Signature</span><div>For <b id="pFirmBottom">Your Firm Name</b></div></div>
+          </div>
+
+          <div class="preview-actions">
+            <button class="btn dark" id="downloadBtn">⇩ Download PDF</button>
+            <button class="btn whatsapp" id="whatsappBtn">◉ WhatsApp</button>
+            <button class="btn secondary" id="emailBtn">✉ Email</button>
+            <button class="btn secondary" id="printBtn">▣ Print</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
